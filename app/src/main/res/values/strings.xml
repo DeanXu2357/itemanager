@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Personal Asset Management</string>
+    <string name="add_item">Add Item</string>
+    <string name="item_name">Item Name</string>
+    <string name="item_type">Item Type</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="sort_by">Sort by</string>
+    <string name="filter_by">Filter by</string>
+    <string name="statistics">Statistics</string>
+    <string name="total_items">Total Items: %d</string>
+    <string name="items_per_type">Items per Type:</string>
+    <string name="most_common_type">Most Common Type: %s</string>
+</resources>
