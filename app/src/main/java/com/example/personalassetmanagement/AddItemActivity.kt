@@ -2,80 +2,85 @@ package com.example.personalassetmanagement
 
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
+import android.widget.Button
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.personalassetmanagement.data.AssetDatabase
 import com.example.personalassetmanagement.data.Item
-import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.Dispatchers
+import com.example.personalassetmanagement.data.ItemType
+import com.example.personalassetmanagement.ui.MainViewModel
+import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.util.*
 
 class AddItemActivity : AppCompatActivity() {
 
-    private lateinit var nameInputLayout: TextInputLayout
-    private lateinit var typeInputLayout: TextInputLayout
-    private lateinit var typeAutoCompleteTextView: AutoCompleteTextView
+    private lateinit var viewModel: MainViewModel
+    private lateinit var nameEditText: TextInputEditText
+    private lateinit var typeSpinner: Spinner
+    private lateinit var barcodeEditText: TextInputEditText
+    private lateinit var itemTypes: List<ItemType>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.add_item_activity)
+        setContentView(R.layout.activity_add_item)
 
-        nameInputLayout = findViewById(R.id.name_input_layout)
-        typeInputLayout = findViewById(R.id.type_input_layout)
-        typeAutoCompleteTextView = findViewById(R.id.type_autocomplete)
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
-        val database = AssetDatabase.getDatabase(applicationContext)
-        val itemDao = database.itemDao()
-        val itemTypeDao = database.itemTypeDao()
+        nameEditText = findViewById(R.id.nameEditText)
+        typeSpinner = findViewById(R.id.typeSpinner)
+        barcodeEditText = findViewById(R.id.barcodeEditText)
 
-        itemTypeDao.getAllItemTypes().observe(this) { itemTypes ->
-            val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, itemTypes.map { it.name })
-            typeAutoCompleteTextView.setAdapter(adapter)
+        lifecycleScope.launch {
+            itemTypes = viewModel.getAllItemTypes().first()
+            val itemTypeNames = itemTypes.map { it.name }
+            val adapter = ArrayAdapter(this@AddItemActivity, android.R.layout.simple_spinner_item, itemTypeNames)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            typeSpinner.adapter = adapter
         }
 
-        findViewById<com.google.android.material.button.MaterialButton>(R.id.button_save).setOnClickListener {
-            val name = nameInputLayout.editText?.text.toString().trim()
-            val type = typeAutoCompleteTextView.text.toString().trim()
+        val saveButton: Button = findViewById(R.id.saveButton)
+        saveButton.setOnClickListener {
+            saveItem()
+        }
 
-            if (validateInput(name, type)) {
-                lifecycleScope.launch {
-                    try {
-                        withContext(Dispatchers.IO) {
-                            val newItem = Item(name = name, type = type)
-                            itemDao.insert(newItem)
-                        }
-                        Toast.makeText(this@AddItemActivity, "Item saved successfully", Toast.LENGTH_SHORT).show()
-                        finish()
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AddItemActivity, "Error saving item: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
-            }
+        val scanBarcodeButton: Button = findViewById(R.id.scanBarcodeButton)
+        scanBarcodeButton.setOnClickListener {
+            // TODO: Implement barcode scanning functionality
+            Toast.makeText(this, "Barcode scanning not implemented yet", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun validateInput(name: String, type: String): Boolean {
-        var isValid = true
+    private fun saveItem() {
+        val name = nameEditText.text.toString().trim()
+        val selectedTypePosition = typeSpinner.selectedItemPosition
+        val barcode = barcodeEditText.text.toString().trim()
 
         if (name.isEmpty()) {
-            nameInputLayout.error = "Name cannot be empty"
-            isValid = false
-        } else {
-            nameInputLayout.error = null
+            Toast.makeText(this, "Please enter an item name", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        if (type.isEmpty()) {
-            typeInputLayout.error = "Type cannot be empty"
-            isValid = false
-        } else {
-            typeInputLayout.error = null
+        if (selectedTypePosition < 0 || selectedTypePosition >= itemTypes.size) {
+            Toast.makeText(this, "Please select a valid item type", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        return isValid
+        val selectedType = itemTypes[selectedTypePosition]
+
+        val newItem = Item(
+            name = name,
+            typeId = selectedType.id,
+            barcode = if (barcode.isNotEmpty()) barcode else null,
+            dateAdded = Date(),
+            dateModified = Date()
+        )
+
+        viewModel.insert(newItem)
+        Toast.makeText(this, "Item saved successfully", Toast.LENGTH_SHORT).show()
+        finish()
     }
 }

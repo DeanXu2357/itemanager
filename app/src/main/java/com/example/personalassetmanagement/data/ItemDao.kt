@@ -1,40 +1,37 @@
 package com.example.personalassetmanagement.data
 
-import androidx.lifecycle.LiveData
-import androidx.paging.PagingSource
 import androidx.room.*
+import androidx.paging.PagingSource
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM items ORDER BY name ASC")
-    fun getAllItemsSortedByName(): PagingSource<Int, Item>
-
-    @Query("SELECT * FROM items ORDER BY type ASC")
-    fun getAllItemsSortedByType(): PagingSource<Int, Item>
-
-    @Query("SELECT * FROM items WHERE type = :itemType ORDER BY name ASC")
-    fun getItemsByType(itemType: String): PagingSource<Int, Item>
-
-    @Query("SELECT * FROM items WHERE id = :id")
-    fun getItemById(id: Int): LiveData<Item>
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(item: Item)
-
-    @Delete
-    suspend fun delete(item: Item)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: Item): Long
 
     @Update
     suspend fun update(item: Item)
 
-    @Query("SELECT COUNT(*) FROM items")
-    suspend fun getTotalItems(): Int
+    @Delete
+    suspend fun delete(item: Item)
 
-    @Query("SELECT type, COUNT(*) as count FROM items GROUP BY type")
-    suspend fun getItemsPerType(): List<ItemTypeCount>
+    @Query("SELECT * FROM items WHERE id = :id")
+    fun getItemById(id: Long): Flow<Item>
+
+    @Query("SELECT items.*, item_types.name AS typeName FROM items INNER JOIN item_types ON items.typeId = item_types.id ORDER BY items.dateModified DESC")
+    fun getAllItemsWithType(): PagingSource<Int, ItemWithType>
+
+    @Query("SELECT items.*, item_types.name AS typeName FROM items INNER JOIN item_types ON items.typeId = item_types.id WHERE items.typeId = :typeId ORDER BY items.dateModified DESC")
+    fun getItemsByTypeWithType(typeId: Long): PagingSource<Int, ItemWithType>
+
+    @Query("SELECT COUNT(*) FROM items")
+    fun getItemCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM items WHERE typeId = :typeId")
+    fun getItemCountByType(typeId: Long): Flow<Int>
 }
 
-data class ItemTypeCount(
-    @ColumnInfo(name = "type") val type: String,
-    @ColumnInfo(name = "count") val count: Int
+data class ItemWithType(
+    @Embedded val item: Item,
+    @ColumnInfo(name = "typeName") val typeName: String
 )
