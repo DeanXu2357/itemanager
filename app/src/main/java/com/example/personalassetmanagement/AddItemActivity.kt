@@ -12,9 +12,9 @@ import com.example.personalassetmanagement.data.Item
 import com.example.personalassetmanagement.data.ItemType
 import com.example.personalassetmanagement.ui.MainViewModel
 import com.google.android.material.textfield.TextInputEditText
+import java.util.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.*
 
 class AddItemActivity : AppCompatActivity() {
 
@@ -35,17 +35,20 @@ class AddItemActivity : AppCompatActivity() {
         barcodeEditText = findViewById(R.id.barcodeEditText)
 
         lifecycleScope.launch {
-            itemTypes = viewModel.getAllItemTypes().first()
+            itemTypes = viewModel.allItemTypes.first()
             val itemTypeNames = itemTypes.map { it.name }
-            val adapter = ArrayAdapter(this@AddItemActivity, android.R.layout.simple_spinner_item, itemTypeNames)
+            val adapter =
+                    ArrayAdapter(
+                            this@AddItemActivity,
+                            android.R.layout.simple_spinner_item,
+                            itemTypeNames
+                    )
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             typeSpinner.adapter = adapter
         }
 
         val saveButton: Button = findViewById(R.id.saveButton)
-        saveButton.setOnClickListener {
-            saveItem()
-        }
+        saveButton.setOnClickListener { saveItem() }
 
         val scanBarcodeButton: Button = findViewById(R.id.scanBarcodeButton)
         scanBarcodeButton.setOnClickListener {
@@ -71,13 +74,14 @@ class AddItemActivity : AppCompatActivity() {
 
         val selectedType = itemTypes[selectedTypePosition]
 
-        val newItem = Item(
-            name = name,
-            typeId = selectedType.id,
-            barcode = if (barcode.isNotEmpty()) barcode else null,
-            dateAdded = Date(),
-            dateModified = Date()
-        )
+        val newItem =
+                Item(
+                        name = name,
+                        typeId = selectedType.id,
+                        barcode = if (barcode.isNotEmpty()) barcode else null,
+                        dateAdded = Date(),
+                        dateModified = Date()
+                )
 
         viewModel.insert(newItem)
         Toast.makeText(this, "Item saved successfully", Toast.LENGTH_SHORT).show()
