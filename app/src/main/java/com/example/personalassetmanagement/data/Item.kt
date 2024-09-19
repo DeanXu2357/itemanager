@@ -3,6 +3,7 @@ package com.example.personalassetmanagement.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import java.util.Date
 
@@ -17,7 +18,7 @@ import java.util.Date
         )
     ]
 )
-@TypeConverters(Converters::class)
+@TypeConverters(ItemConverters::class)
 data class Item(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var name: String,
@@ -32,7 +33,7 @@ data class Item(
 )
 
 // Add this class to handle type conversions for Room
-class Converters {
+class ItemConverters {
     @TypeConverter
     fun fromString(value: String): List<String> = value.split(",")
 

@@ -4,14 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Date
 
 @Database(entities = [Item::class, ItemType::class], version = 2, exportSchema = false)
-@TypeConverters(Converters::class)
+@TypeConverters(AssetConverters::class)
 abstract class AssetDatabase : RoomDatabase() {
 
     abstract fun itemDao(): ItemDao
@@ -70,7 +72,7 @@ abstract class AssetDatabase : RoomDatabase() {
 }
 
 // Updated Converters class
-class Converters {
+class AssetConverters {
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {
         return value?.let { Date(it) }

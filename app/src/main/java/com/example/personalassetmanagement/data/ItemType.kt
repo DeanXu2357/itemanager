@@ -2,10 +2,11 @@ package com.example.personalassetmanagement.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
 @Entity(tableName = "item_types")
-@TypeConverters(Converters::class)
+@TypeConverters(ItemTypeConverters::class)
 data class ItemType(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var name: String,
@@ -24,7 +25,7 @@ enum class FieldType {
 }
 
 // Add this class to handle type conversions for Room
-class Converters {
+class ItemTypeConverters {
     @TypeConverter
     fun fromCustomFields(value: String): List<CustomField> = value.split("|").map { field ->
         val (name, type, options) = field.split(":")

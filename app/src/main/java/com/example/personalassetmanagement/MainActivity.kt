@@ -1,44 +1,56 @@
 package com.example.personalassetmanagement
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.personalassetmanagement.ui.ItemAdapter
-import com.example.personalassetmanagement.ui.MainViewModel
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import androidx.fragment.app.Fragment
+import com.example.personalassetmanagement.ui.CategoriesFragment
+import com.example.personalassetmanagement.ui.HomeFragment
+//import com.example.personalassetmanagement.ui.SettingsFragment
+import com.example.personalassetmanagement.ui.StatisticsFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var viewModel: MainViewModel
-    private lateinit var adapter: ItemAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    loadFragment(HomeFragment())
+                    true
+                }
 
-        val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        adapter = ItemAdapter()
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+                R.id.navigation_categories -> {
+                    loadFragment(CategoriesFragment())
+                    true
+                }
 
-        lifecycleScope.launch {
-            viewModel.allItems.collectLatest { pagingData ->
-                adapter.submitData(pagingData)
+                R.id.navigation_statistics -> {
+                    loadFragment(StatisticsFragment())
+                    true
+                }
+//        R.id.navigation_settings -> {
+//            loadFragment(SettingsFragment())
+//            true
+//        }
+                else -> false
             }
         }
 
-        val fab: FloatingActionButton = findViewById(R.id.fab)
-        fab.setOnClickListener {
-            val intent = Intent(this, AddItemActivity::class.java)
-            startActivity(intent)
+
+        // Set default fragment
+        if (savedInstanceState == null) {
+            loadFragment(HomeFragment())
         }
+    }
+
+    private fun loadFragment(fragment: Fragment) {
+        supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit()
     }
 }
