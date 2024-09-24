@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.observe
 import com.example.personalassetmanagement.data.AssetDatabase
 import com.example.personalassetmanagement.data.Item
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class EditItemActivity : AppCompatActivity() {
 
@@ -32,46 +34,68 @@ class EditItemActivity : AppCompatActivity() {
             return
         }
 
-        val database = AssetDatabase.getDatabase(applicationContext)
+        val database = AssetDatabase.getDatabase(applicationContext, lifecycleScope)
         val itemDao = database.itemDao()
         val itemTypeDao = database.itemTypeDao()
-
-        itemTypeDao.getAllItemTypes().observe(this) { itemTypes ->
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, itemTypes.map { it.name })
+        itemTypeDao.getAllItemTypes().observe(this@EditItemActivity) { itemTypes ->
+            val adapter =
+                ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    itemTypes.map { it.name }
+                )
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             typeSpinner.adapter = adapter
 
-            itemDao.getItemById(itemId).observe(this) { item ->
+            itemDao.getItemById(itemId).observe(this@EditItemActivity) { item ->
                 nameEditText.setText(item.name)
                 typeSpinner.setSelection(itemTypes.indexOfFirst { it.name == item.type })
             }
         }
-
         saveButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
-            val type = typeSpinner.selectedItem as String
+            val type = typeSpinner.selectedItem.toString() ? : ""
 
-            if (name.isNotEmpty() && type.isNotEmpty()) {
+            if (name.isNotBlank() && type.isNotBlank()) {
                 lifecycleScope.launch(Dispatchers.IO) {
                     val updatedItem = Item(id = itemId, name = name, type = type)
                     itemDao.update(updatedItem)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@EditItemActivity, "Item updated", Toast.LENGTH_SHORT)
+                            .show()
+                        finish()
+                    }
                 }
-                Toast.makeText(this, "Item updated", Toast.LENGTH_SHORT).show()
-                finish()
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }
         }
 
         deleteButton.setOnClickListener {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val item = itemDao.getItemById(itemId).value
-                if (item != null) {
-                    itemDao.delete(item)
-                }
-            }
-            Toast.makeText(this, "Item deleted", Toast.LENGTH_SHORT).show()
-            finish()
+            val itemIdLong = itemId.toLong()
+            itemDao.getItemById(itemIdLong)
+                .observe(
+                    this@EditItemActivity,
+                    { item ->
+                        if (item != null) {
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                itemDao.delete(item)
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@EditItemActivity,
+                                        "Item deleted",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                        .show()
+                                    finish()
+                                }
+                            }
+                        } else {
+                            Toast.makeText(this, "Item not found", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                )
         }
     }
 }
