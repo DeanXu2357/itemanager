@@ -1,5 +1,6 @@
 package com.example.personalassetmanagement.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -27,7 +28,7 @@ interface ItemTypeDao {
     suspend fun itemTypeExists(name: String): Boolean
 
     @Query("SELECT * FROM item_types ORDER BY name ASC")
-    fun getAllItemTypes(): Flow<List<ItemType>>
+    fun getAllItemTypes(): LiveData<List<ItemType>>
 
     @Query("SELECT COUNT(*) FROM item_types")
     fun getItemTypeCount(): Flow<Int>

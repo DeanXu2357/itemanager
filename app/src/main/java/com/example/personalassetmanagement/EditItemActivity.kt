@@ -4,13 +4,12 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.observe
 import com.example.personalassetmanagement.data.AssetDatabase
 import com.example.personalassetmanagement.data.Item
 import com.example.personalassetmanagement.data.ItemDao
+import com.example.personalassetmanagement.data.ItemType
 import com.example.personalassetmanagement.data.ItemTypeDao
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.observeOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -30,7 +29,7 @@ class EditItemActivity : AppCompatActivity() {
 
     private fun setupTypeSpinner(itemTypeDao: ItemTypeDao) {
         lifecycleScope.launch {
-            itemTypeDao.getAllItemTypes().collect { itemTypes ->
+            itemTypeDao.getAllItemTypes().observe(this@EditItemActivity) { itemTypes ->
                 val adapter = ArrayAdapter(
                     this@EditItemActivity,
                     android.R.layout.simple_spinner_item,
