@@ -23,7 +23,7 @@ class StatisticsActivity : AppCompatActivity() {
         itemsPerTypeTextView = findViewById(R.id.textView_items_per_type)
         mostCommonTypeTextView = findViewById(R.id.textView_most_common_type)
 
-        val database = AssetDatabase.getDatabase(applicationContext)
+        val database = AssetDatabase.getDatabase(applicationContext, lifecycleScope)
         val itemDao = database.itemDao()
 
         lifecycleScope.launch {

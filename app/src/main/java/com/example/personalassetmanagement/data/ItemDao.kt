@@ -1,5 +1,6 @@
 package com.example.personalassetmanagement.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,7 @@ interface ItemDao {
     suspend fun deleteAll(items: List<Item>)
 
     @Query("SELECT * FROM items WHERE id = :id")
-    fun getItemById(id: Long): Flow<Item>
+    fun getItemById(id: Long): LiveData<Item>
 
     @Query("SELECT items.*, item_types.name AS typeName FROM items INNER JOIN item_types ON items.typeId = item_types.id ORDER BY items.dateModified DESC")
     fun getAllItemsWithType(): PagingSource<Int, ItemWithType>
