@@ -28,7 +28,7 @@ class StatisticsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val totalItems = withContext(Dispatchers.IO) {
-                itemDao.getTotalItems()
+                itemDao.getAllItemsWithTypeSorted("name", "ASC")
             }
             totalItemsTextView.text = getString(R.string.total_items, totalItems)
 

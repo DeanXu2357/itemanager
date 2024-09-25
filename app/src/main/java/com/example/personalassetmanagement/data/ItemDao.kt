@@ -46,9 +46,17 @@ interface ItemDao {
 
     @Query("SELECT * FROM items WHERE barcode = :barcode LIMIT 1")
     suspend fun getItemByBarcode(barcode: String): Item?
+
+    @Query("SELECT item_types.name AS type, COUNT(items.id) AS count FROM items INNER JOIN item_types ON items.typeId = item_types.id GROUP BY items.typeId")
+    suspend fun getItemsPerType(): List<ItemTypeCount>
 }
 
 data class ItemWithType(
     @Embedded val item: Item,
     @ColumnInfo(name = "typeName") val typeName: String
+)
+
+data class ItemTypeCount(
+    val type: String,
+    val count: Int
 )
